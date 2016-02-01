@@ -1,0 +1,63 @@
+#cloud-config
+
+coreos:
+  etcd2:
+    listen-client-urls: http://0.0.0.0:2379
+    initial-cluster: master01=http://172.17.8.11:2380,master02=http://172.17.8.12:2380,master03=http://172.17.8.13:2380
+    proxy: on
+  fleet:
+    public-ip: $public_ipv4
+    metadata: role=node,profile=v1
+  flannel:
+    public-ip: $public_ipv4
+    interface: $public_ipv4
+  units:
+    - name: etcd2.service
+      command: start
+    - name: fleet.service
+      command: start
+    - name: flanneld.service
+      drop-ins:
+      - name: 50-network-config.conf
+        content: |
+          [Service]
+          ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
+      command: start
+    - name: docker-tcp.socket
+      command: start
+      enable: true
+      content: |
+        [Unit]
+        Description=Docker Socket for the API
+
+        [Socket]
+        ListenStream=2375
+        Service=docker.service
+        BindIPv6Only=both
+
+        [Install]
+        WantedBy=sockets.target
+
+#    - name: kubelet.service
+#      command: start
+#      enable: true
+#      content: |
+#        [Unit]
+#        Description=Kubernetes API server
+#
+#        [Service]
+#        ExecStartPre = -/usr/bin/docker pull gcr.io/google_containers/hyperkube:v1.1.4
+#        ExecStartPre = -/usr/bin/docker stop kubelet
+#        ExecStartPre = -/usr/bin/docker rm -f kubelet
+#        ExecStart    = /usr/bin/docker run --name kubelet --net host --pid host --privileged \
+#                                           -v /:/rootfs:ro -v /sys:/sys:ro -v /dev:/dev -v /var/lib/docker/:/var/lib/docker:ro -v /var/lib/kubelet/:/var/lib/kubelet:rw -v /var/run:/var/run:rw -v /etc/kubernetes/manifests:/etc/kubernetes/manifests/:rw \
+#                                           gcr.io/google_containers/hyperkube:v1.1.4 /hyperkube kubelet --containerized --config /etc/kubernetes/manifests --register-node false \
+#                                           --address $public_ipv4 --api-servers http://172.17.8.11:8080,http://172.17.8.12:8080,http://172.17.8.13:8080
+#        TimeoutStartSec = 300
+#        Restart      = always
+#        RestartSec   = 5
+#
+#        [Instal]
+#        WantedBy = multi-user.target
+
+manage_etc_hosts: "localhost"
