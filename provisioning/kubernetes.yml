@@ -1,7 +1,66 @@
 ---
-- hosts: all
+- hosts: master
   user: core
   gather_facts: false
-  tasks:
-  - raw: hostname
 
+  vars:
+  - version: 1.1.4
+
+  tasks:
+  ##
+  ## Make sure all master hosts are provisioned with manifests used by podmaster
+  ##
+  - raw: sudo mkdir -p /etc/kubernetes/podmaster
+  - raw: sudo mkdir -p /etc/kubernetes/manifests
+  - raw: sudo chown core /etc/kubernetes/podmaster
+  - raw: sudo chown core /etc/kubernetes/manifests
+  - shell: scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {{ ansible_ssh_private_key_file }} -P {{ ansible_ssh_port }} provisioning/manifests/kube-controller-manager.manifest core@{{ ansible_ssh_host }}:/etc/kubernetes/podmaster/kube-controller-manager.manifest
+    connection: local
+  - shell: scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {{ ansible_ssh_private_key_file }} -P {{ ansible_ssh_port }} provisioning/manifests/kube-scheduler.manifest core@{{ ansible_ssh_host }}:/etc/kubernetes/podmaster/kube-scheduler.manifest
+    connection: local
+  - shell: scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {{ ansible_ssh_private_key_file }} -P {{ ansible_ssh_port }} provisioning/manifests/podmaster.manifest core@{{ ansible_ssh_host }}:/etc/kubernetes/manifests/podmaster.manifest
+    connection: local
+
+- hosts: master[0]
+  user: core
+  gather_facts: false
+
+  vars:
+  - version: 1.1.4
+
+  tasks:
+
+  - template: src=apiserver.service.j2 dest=/tmp/apiserver.service
+    connection: local
+  - shell: scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {{ ansible_ssh_private_key_file }} -P {{ ansible_ssh_port }} /tmp/apiserver.service core@{{ ansible_ssh_host }}:apiserver.service
+    connection: local
+  - raw: fleetctl load apiserver.service
+  - pause: seconds=1
+  - raw: fleetctl start apiserver.service
+  - file: path=/tmp/apiserver.service state=absent
+    connection: local
+  - pause: seconds=10 # ca be replaced with wait_for port=8080 for python enabled servers
+
+  - template: src=kubelet.service.j2 dest=/tmp/kubelet.service
+    connection: local
+  - shell: scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {{ ansible_ssh_private_key_file }} -P {{ ansible_ssh_port }} /tmp/kubelet.service core@{{ ansible_ssh_host }}:kubelet.service
+    connection: local
+  - raw: fleetctl load kubelet.service
+  - pause: seconds=1
+  - raw: fleetctl start kubelet.service
+  - file: path=/tmp/kubelet.service state=absent
+    connection: local
+
+#  - pause: seconds=10
+
+#- hosts: all
+#  user: core
+#  gather_facts: false
+#  serial: 1
+#
+#  vars:
+#  - version: 1.1.4
+#
+#  tasks:
+#  - raw: bash -c "while true; do UNITS=$(systemctl | grep kubelet | grep activ | awk '{ print $1 }'); [ "$UNITS" == "" ] && break; sudo systemctl stop $UNITS; sleep 1; done"
+#  - raw: sudo systemctl restart kubelet-{{version}}.service

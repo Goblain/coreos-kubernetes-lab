@@ -1,0 +1,5 @@
+#!/bin/bash
+
+export ANSIBLE_HOST_KEY_CHECKING=False
+ansible-playbook --user core --private-key ~/.vagrant.d/insecure_private_key -i .vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory provisioning/kubernetes.yml -vvv
+export ANSIBLE_HOST_KEY_CHECKING=True
