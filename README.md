@@ -1,14 +1,15 @@
-= Simple and dirty CoreOS/Kubernetes lab =
+# Simple and dirty CoreOS/Kubernetes lab
 
-== Requirements ==
+## Requirements
 * vagrant
 * ansible
 
-== Start environment ==
+## Start environment
 vagrant up
+
 ./k8s-provision
 
-== Use cluster ==
+## Use cluster
 after a short while when cluster is provisioned you can use it like :
 
 wget https://storage.googleapis.com/kubernetes-release/release/v{{version}}/bin/linux/amd64/kubectl
