@@ -1,3 +1,5 @@
+= Simple and dirty CoreOS/Kubernetes lab =
+
 == Requirements ==
 * vagrant
 * ansible
