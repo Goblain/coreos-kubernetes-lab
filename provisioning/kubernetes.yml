@@ -51,6 +51,16 @@
   - file: path=/tmp/kubelet.service state=absent
     connection: local
 
+  - template: src=proxy.service.j2 dest=/tmp/proxy.service
+    connection: local
+  - shell: scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {{ ansible_ssh_private_key_file }} -P {{ ansible_ssh_port }} /tmp/proxy.service core@{{ ansible_ssh_host }}:proxy.service
+    connection: local
+  - raw: fleetctl load proxy.service
+  - pause: seconds=1
+  - raw: fleetctl start proxy.service
+  - file: path=/tmp/proxy.service state=absent
+    connection: local
+
 #  - pause: seconds=10
 
 #- hosts: all
