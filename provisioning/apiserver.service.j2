@@ -6,7 +6,7 @@ ExecStartPre = -/usr/bin/docker stop apiserver
 ExecStartPre = -/usr/bin/docker rm -f apiserver
 ExecStart    = /bin/bash -c "/usr/bin/docker run --name apiserver --net host \
                                    gcr.io/google_containers/hyperkube:v{{version}} /hyperkube apiserver \
-                                   --service-cluster-ip-range 10.0.0.0/24 \
+                                   --service-cluster-ip-range 10.12.0.0/16 \
                                    --etcd-servers http://172.17.8.11:2379,http://172.17.8.12:2379,http://172.17.8.13:2379 \
                                    --insecure-bind-address 0.0.0.0"
 #                                   --insecure-bind-address $(ip ad show eth1 | grep inet | head -n 1 | awk '{ print $2 }' | cut -f1 -d'/')"
