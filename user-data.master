@@ -1,6 +1,8 @@
 #cloud-config
 
 coreos:
+  update:
+    reboot-strategy: off
   etcd2:
     advertise-client-urls: http://$public_ipv4:2379
     initial-advertise-peer-urls: http://$private_ipv4:2380
@@ -38,71 +40,5 @@ coreos:
 
         [Install]
         WantedBy=sockets.target
-
-#    - name: kubelet.service
-#      command: start
-#      enable: true
-#      content: |
-#        [Unit]
-#        Description=Kubernetes API server
-#
-#        [Service]
-#        ExecStartPre = -/usr/bin/docker pull gcr.io/google_containers/hyperkube:v1.1.4
-#        ExecStartPre = -/usr/bin/docker stop kubelet
-#        ExecStartPre = -/usr/bin/docker rm -f kubelet
-#        ExecStart    = /usr/bin/docker run --name kubelet --net host --pid host --privileged \
-#                                           -v /:/rootfs:ro -v /sys:/sys:ro -v /dev:/dev -v /var/lib/docker/:/var/lib/docker:ro -v /var/lib/kubelet/:/var/lib/kubelet:rw -v /var/run:/var/run:rw -v /etc/kubernetes/manifests:/etc/kubernetes/manifests/:rw \
-#                                           gcr.io/google_containers/hyperkube:v1.1.4 /hyperkube kubelet --containerized --config /etc/kubernetes/manifests --register-node false \
-#                                           --address $public_ipv4 --api-servers http://172.17.8.11:8080,http://172.17.8.12:8080,http://172.17.8.13:8080
-#        TimeoutStartSec = 300
-#        Restart      = always
-#        RestartSec   = 5
-#
-#        [Instal]
-#        WantedBy = multi-user.target
-
-#    - name: k8s-apiserver.service
-#      command: start
-#      enable: true
-#      content: |
-#        [Unit]
-#        Description=Kubernetes API server
-#
-#        [Service]
-#        ExecStartPre = -/usr/bin/docker pull gcr.io/google_containers/hyperkube:v1.1.4
-#        ExecStartPre = -/usr/bin/docker stop k8s-apiserver
-#        ExecStartPre = -/usr/bin/docker rm -f k8s-apiserver
-#        ExecStart    = /usr/bin/docker run --name k8s-apiserver --net host \
-#                                           gcr.io/google_containers/hyperkube:v1.1.4 /hyperkube apiserver \
-#                                           --service-cluster-ip-range 10.0.0.0/24 \
-#                                           --etcd-servers http://172.17.8.11:2379,http://172.17.8.12:2379,http://172.17.8.13:2379 \
-#                                           --insecure-bind-address $public_ipv4
-#        TimeoutStartSec = 300
-#        Restart      = always
-#        RestartSec   = 5
-
-#write_files:
-#- path: "/etc/kubernetes/manifests/kube-apiserver.yml"
-#  permissions: "0644"
-#  owner: "root"
-#  content: |
-#    apiVersion: v1
-#    kind: Pod
-#    metadata:
-#      name: kube-apiserver
-#    spec:
-#      hostNetwork: true
-#      containers:
-#      - name: kube-apiserver
-#        image: gcr.io/google_containers/hyperkube:v1.1.4
-#        command:
-#        - /hyperkube 
-#        - apiserver 
-#        - --service-cluster-ip-range
-#        - 10.0.0.0/24
-#        - --etcd-servers
-#        - http://172.17.8.11:2379,http://172.17.8.12:2379,http://172.17.8.13:2379
-#        - --insecure-bind-address 
-#        - $public_ipv4
 
 manage_etc_hosts: "localhost"

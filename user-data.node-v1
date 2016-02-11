@@ -1,6 +1,8 @@
 #cloud-config
 
 coreos:
+  update:
+    reboot-strategy: off
   etcd2:
     listen-client-urls: http://0.0.0.0:2379
     initial-cluster: master01=http://172.17.8.11:2380,master02=http://172.17.8.12:2380,master03=http://172.17.8.13:2380
@@ -32,27 +34,5 @@ coreos:
 
         [Install]
         WantedBy=sockets.target
-
-#    - name: kubelet.service
-#      command: start
-#      enable: true
-#      content: |
-#        [Unit]
-#        Description=Kubernetes API server
-#
-#        [Service]
-#        ExecStartPre = -/usr/bin/docker pull gcr.io/google_containers/hyperkube:v1.1.4
-#        ExecStartPre = -/usr/bin/docker stop kubelet
-#        ExecStartPre = -/usr/bin/docker rm -f kubelet
-#        ExecStart    = /usr/bin/docker run --name kubelet --net host --pid host --privileged \
-#                                           -v /:/rootfs:ro -v /sys:/sys:ro -v /dev:/dev -v /var/lib/docker/:/var/lib/docker:ro -v /var/lib/kubelet/:/var/lib/kubelet:rw -v /var/run:/var/run:rw -v /etc/kubernetes/manifests:/etc/kubernetes/manifests/:rw \
-#                                           gcr.io/google_containers/hyperkube:v1.1.4 /hyperkube kubelet --containerized --config /etc/kubernetes/manifests --register-node false \
-#                                           --address $public_ipv4 --api-servers http://172.17.8.11:8080,http://172.17.8.12:8080,http://172.17.8.13:8080
-#        TimeoutStartSec = 300
-#        Restart      = always
-#        RestartSec   = 5
-#
-#        [Instal]
-#        WantedBy = multi-user.target
 
 manage_etc_hosts: "localhost"
