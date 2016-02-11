@@ -9,7 +9,7 @@ ExecStartPre = -/usr/bin/docker rm -f kubelet
 ExecStart    = /usr/bin/docker run --name kubelet --net host --pid host --privileged \
                                    -v /:/rootfs:ro -v /sys:/sys:ro -v /dev:/dev -v /var/lib/docker/:/var/lib/docker:ro -v /var/lib/kubelet/:/var/lib/kubelet:rw -v /var/run:/var/run:rw -v /etc/kubernetes/manifests:/etc/kubernetes/manifests/:rw \
                                    gcr.io/google_containers/hyperkube:v{{version}} /hyperkube kubelet --containerized --config /etc/kubernetes/manifests --register-node false \
-                                   --api-servers http://172.17.8.11:8080,http://172.17.8.12:8080,http://172.17.8.13:8080
+                                   --api-servers http://172.17.8.11:8080,http://172.17.8.12:8080,http://172.17.8.13:8080 --cluster-dns=10.12.0.10 --cluster-domain=cluster.local
 ExecStartPost = /usr/bin/sleep 5
 ExecStartPost = /usr/bin/bash -c "/usr/bin/docker run --rm --net host goblain/kubectl -s 172.17.8.11:8080 label --overwrite=true nodes %H $(grep FLEET_METADATA /run/systemd/system/fleet.service.d/20-cloudinit.conf | cut -d= -f3- | sed 's/.$//' | sed 's/,/ /g')"
 TimeoutStartSec = 300
