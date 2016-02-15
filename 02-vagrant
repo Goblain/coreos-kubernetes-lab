@@ -1,0 +1,6 @@
+#!/bin/bash
+
+#vagrant up master01 master02 master03 node01
+vagrant up
+ansible-playbook -i "127.0.0.1," provisioning/vagrant-inventory.yml
+

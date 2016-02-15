@@ -1,0 +1,82 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+  ##
+  ## Prepare adhoc CA
+  ##
+  - file: path=.work/kube-ca state=directory
+  - shell: openssl genrsa -out ca-key.pem 2048
+    args:
+      chdir: .work/kube-ca
+      creates: ca-key.pem
+  - shell: openssl req -x509 -new -nodes -key ca-key.pem -days 10000 -out ca.pem -subj "/CN=kube-ca"
+    args:
+      chdir: .work/kube-ca
+      creates: ca.pem
+  ##
+  ## API server certificate generation
+  ##
+
+  - template: src=templates/openssl-apiserver.cnf.j2 dest=.work/kube-ca/openssl-apiserver.cnf
+  - shell: openssl genrsa -out apiserver-key.pem 2048
+    args:
+      chdir: .work/kube-ca
+      creates: apiserver-key.pem
+  - shell: openssl req -new -key apiserver-key.pem -out apiserver.csr -subj "/CN=kube-apiserver" -config openssl-apiserver.cnf
+    args:
+      chdir: .work/kube-ca
+      creates: apiserver.csr.pem
+  - shell: openssl x509 -req -in apiserver.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out apiserver.pem -days 3650 -extensions v3_req -extfile openssl-apiserver.cnf
+    args:
+      chdir: .work/kube-ca
+      creates: apiserver.pem
+
+  ##
+  ## Kubelet certificate
+  ##
+
+  - template: src=templates/openssl-node.cnf.j2 dest=.work/kube-ca/openssl-node.cnf
+  - shell: openssl genrsa -out kubelet-key.pem 2048
+    args:
+      chdir: .work/kube-ca
+      creates: kubelet-key.pem
+  - shell: openssl req -new -key kubelet-key.pem -out kubelet.csr -subj "/CN=kubelet"
+    args:
+      chdir: .work/kube-ca
+      creates: kubelet.csr
+  - shell: openssl x509 -req -in kubelet.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out kubelet.pem -days 3650 -extensions v3_req -extfile openssl-node.cnf
+    args:
+      chdir: .work/kube-ca
+      creates: kubelet.pem
+
+  ##
+  ## Kubectl admin certificate
+  ##
+
+  - shell: openssl genrsa -out admin-key.pem 2048
+    args:
+      chdir: .work/kube-ca
+      creates: admin-key.pem
+  - shell: openssl req -new -key admin-key.pem -out admin.csr -subj "/CN=kube-admin"
+    args:
+      chdir: .work/kube-ca
+      creates: admin.csr
+  - shell: openssl x509 -req -in admin.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out admin.pem -days 365
+    args:
+      chdir: .work/kube-ca
+      creates: admin.pem
+
+  ##
+  ## Embed node certs in cloud-config
+  ##
+
+  - template: src=templates/kubeconfig.kubelet.j2 dest=.work/kubeconfig
+  - template: src=templates/user-data.master.j2 dest=.work/user-data.master
+  - template: src=templates/user-data.node.j2 dest=.work/user-data.node-{{item.flavor}}
+    with_items:
+    - flavor: v1
+      tags: profile=v1
+    - flavor: v2
+      tags: profile=v2
+

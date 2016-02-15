@@ -10,8 +10,9 @@ spec:
     command:
     - /hyperkube
     - scheduler
-    - --master=127.0.0.1:8080
+    - --master=https://10.12.0.1
     - --v=2
+    - --kubeconfig=/etc/kubernetes/kubeconfig
 #    livenessProbe:
 #      httpGet:
 #        path: /healthz
@@ -21,6 +22,10 @@ spec:
     volumeMounts:
     - mountPath: /var/log/
       name: logdir
+    - mountPath: /ssl/
+      name: ssl
+    - mountPath: /etc/kubernetes/kubeconfig
+      name: kubeconfig
 #    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
 #      name: default-token-s8ejd
 #      readOnly: true
@@ -28,4 +33,9 @@ spec:
   - name: logdir
     hostPath:
       path: /var/log/kube-scheduler/
-
+  - name: ssl
+    hostPath:
+      path: /etc/kubernetes/ssl/
+  - name: kubeconfig
+    hostPath:
+      path: /etc/kubernetes/kubeconfig

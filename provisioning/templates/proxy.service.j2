@@ -1,0 +1,20 @@
+[Unit]
+Description=Kubernetes API server
+After=apiserver.service
+After=kubelet.service
+
+[Service]
+ExecStartPre = -/usr/bin/docker pull gcr.io/google_containers/hyperkube:v{{version}}
+ExecStartPre = -/usr/bin/docker stop proxy
+ExecStartPre = -/usr/bin/docker rm -f proxy
+ExecStart    = /usr/bin/docker run --name proxy --net host --pid host --privileged -v /etc/kubernetes/ssl:/ssl:ro -v /etc/kubernetes/kubeconfig:/etc/kubernetes/kubeconfig:ro -v /sys:/sys:ro \
+                                   gcr.io/google_containers/hyperkube:v{{version}} /hyperkube proxy --iptables-sync-period 5s --hostname-override %H --master https://172.17.8.11 --proxy-mode iptables --kubeconfig /etc/kubernetes/kubeconfig
+TimeoutStartSec = 300
+Restart      = always
+RestartSec   = 5
+
+[Install]
+WantedBy = multi-user.target
+
+[X-Fleet]
+Global    = true

@@ -7,19 +7,25 @@
   - version: 1.1.4
 
   tasks:
-  ##
-  ## Make sure all master hosts are provisioned with manifests used by podmaster
-  ##
+  - raw: sudo mkdir -p /etc/kubernetes/ssl
   - raw: sudo mkdir -p /etc/kubernetes/podmaster
   - raw: sudo mkdir -p /etc/kubernetes/manifests
+  - raw: sudo chown core /etc/kubernetes/ssl
   - raw: sudo chown core /etc/kubernetes/podmaster
   - raw: sudo chown core /etc/kubernetes/manifests
-  - shell: scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {{ ansible_ssh_private_key_file }} -P {{ ansible_ssh_port }} provisioning/manifests/kube-controller-manager.manifest core@{{ ansible_ssh_host }}:/etc/kubernetes/podmaster/kube-controller-manager.manifest
+  - shell: scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {{ ansible_ssh_private_key_file }} -P {{ ansible_ssh_port }} {{item.src}} core@{{ ansible_ssh_host }}:{{item.dest}}
     connection: local
-  - shell: scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {{ ansible_ssh_private_key_file }} -P {{ ansible_ssh_port }} provisioning/manifests/kube-scheduler.manifest core@{{ ansible_ssh_host }}:/etc/kubernetes/podmaster/kube-scheduler.manifest
-    connection: local
-  - shell: scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {{ ansible_ssh_private_key_file }} -P {{ ansible_ssh_port }} provisioning/manifests/podmaster.manifest core@{{ ansible_ssh_host }}:/etc/kubernetes/manifests/podmaster.manifest
-    connection: local
+    with_items:
+    - src: .work/kube-ca/apiserver.pem
+      dest: /etc/kubernetes/ssl/apiserver.pem
+    - src: .work/kube-ca/apiserver-key.pem
+      dest: /etc/kubernetes/ssl/apiserver-key.pem
+    - src: provisioning/manifests/kube-controller-manager.manifest
+      dest: /etc/kubernetes/podmaster/kube-controller-manager.manifest
+    - src: provisioning/manifests/kube-scheduler.manifest
+      dest: /etc/kubernetes/podmaster/kube-scheduler.manifest
+    - src: provisioning/manifests/podmaster.manifest
+      dest: /etc/kubernetes/manifests/podmaster.manifest
 
 - hosts: master[0]
   user: core

@@ -42,3 +42,29 @@ coreos:
         WantedBy=sockets.target
 
 manage_etc_hosts: "localhost"
+write_files:
+- path: /etc/kubernetes/ssl/kubelet-key.pem
+  permissions: 600
+  owner: root
+  encoding: base64
+  content: |
+    {{ lookup('file', '../.work/kube-ca/kubelet-key.pem') | b64encode }}
+- path: /etc/kubernetes/ssl/kubelet.pem
+  permissions: 600
+  owner: root
+  encoding: base64
+  content: |
+    {{ lookup('file', '../.work/kube-ca/kubelet.pem') | b64encode }}
+- path: /etc/kubernetes/ssl/ca.pem
+  permissions: 600
+  owner: root
+  encoding: base64
+  content: |
+    {{ lookup('file', '../.work/kube-ca/ca.pem') | b64encode }}
+- path: /etc/kubernetes/kubeconfig
+  permissions: 600
+  owner: root
+  encoding: base64
+  content: |
+    {{ lookup('file', '../.work/kubeconfig') | b64encode }}
+

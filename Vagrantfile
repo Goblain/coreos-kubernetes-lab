@@ -6,19 +6,19 @@ $master_instances = 3
 $master_update_channel = "stable"
 $master_memory = 512
 $master_cpus = 1
-$master_cloud_config = "user-data.master"
+$master_cloud_config = ".work/user-data.master"
 
 $node_v1_instances = 2
 $node_v1_update_channel = "beta"
 $node_v1_memory = 512
 $node_v1_cpus = 1
-$node_v1_cloud_config = "user-data.node-v1"
+$node_v1_cloud_config = ".work/user-data.node-v1"
 
 $node_v2_instances = 2
 $node_v2_update_channel = "beta"
 $node_v2_memory = 512
 $node_v2_cpus = 1
-$node_v2_cloud_config = "user-data.node-v2"
+$node_v2_cloud_config = ".work/user-data.node-v2"
 
 Vagrant.configure("2") do |config|
   config.ssh.insert_key = false

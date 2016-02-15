@@ -1,0 +1,17 @@
+[req]
+req_extensions = v3_req
+distinguished_name = req_distinguished_name
+[req_distinguished_name]
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+subjectAltName = @alt_names
+[alt_names]
+DNS.1 = node01
+DNS.2 = node02
+DNS.3 = node03
+DNS.4 = node04
+IP.1 = 172.17.8.101
+IP.2 = 172.17.8.102
+IP.3 = 172.17.8.103
+IP.4 = 172.17.8.104
